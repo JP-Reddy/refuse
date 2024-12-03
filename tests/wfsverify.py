@@ -34,6 +34,7 @@ class WfsState:
     def list_allocated_inodes(self):
         """Return a list of allocated inodes."""
         with open(self.disk, "rb") as diskf:
+            # print("Reading disk: ", self.disk)
             diskf.seek(self.get_ibit())
             ibit = diskf.read(int(self.get_sb_inodes() / 8))
             return self.list_allocations(ibit)
@@ -43,6 +44,9 @@ class WfsState:
         with open(self.disk, "rb") as diskf:
             diskf.seek(self.get_dbit())
             dbit = diskf.read(int(self.get_sb_datablocks() / 8))
+            # print("dbit = ", self.get_dbit())
+            # print("get_sb_datablocks = ", self.get_sb_datablocks())
+            # print("list_allocations = ", self.list_allocations())
             return self.list_allocations(dbit)
 
     def read_inode(self, inodep):
