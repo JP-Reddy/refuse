@@ -8,6 +8,8 @@
 #define IND_BLOCK  (D_BLOCK+1)
 #define N_BLOCKS   (IND_BLOCK+1)
 
+#define MAX_DISKS 10
+
 /*
   The fields in the superblock should reflect the structure of the filesystem.
   `mkfs` writes the superblock to offset 0 of the disk image. 
@@ -32,6 +34,7 @@ struct wfs_sb {
     off_t i_blocks_ptr;
     off_t d_blocks_ptr;
     // Extend after this line
+    int raid;
 };
 
 // Inode
