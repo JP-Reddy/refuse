@@ -15,3 +15,13 @@ mkfs:
 .PHONY: clean
 clean:
 	rm -rf $(BINS)
+
+
+.PHONY: cbwfs
+cbwfs: clean wfs
+
+.PHONY: cbmkfs
+cbwfs: clean mkfs
+
+.PHONY: cba
+cba: clean mkfs wfs
