@@ -35,7 +35,8 @@ struct wfs_sb {
     off_t d_blocks_ptr;
     // Extend after this line
     int raid;
-    char disks[MAX_DISKS][MAX_NAME];
+    int disk_ct;
+    int disk_id;
 };
 
 // Inode

@@ -21,7 +21,7 @@ clean:
 cbwfs: clean wfs
 
 .PHONY: cbmkfs
-cbwfs: clean mkfs
+cbmkfs: clean mkfs
 
 .PHONY: cba
 cba: clean mkfs wfs

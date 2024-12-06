@@ -101,15 +101,15 @@ int parse_arguments(int argc, char* argv[])
             }
             else if(arg_type == RAID){
                 my_fs.raid = atoi(argv[i+1]);
-                printf("jpd raid = %d", my_fs.raid);
+                printf("jpd raid = %d\n", my_fs.raid);
             }
             else if(arg_type == INODE) {
                 my_fs.inodes_ct = round_up_to_nearest_thirtytwo(atoi(argv[i+1]));
-                printf("jpd inodes_ct = %d", my_fs.inodes_ct);
+                printf("jpd inodes_ct = %d\n", my_fs.inodes_ct);
             }
             else if(arg_type == DBLOCK) {
                 my_fs.dblocks_ct = round_up_to_nearest_thirtytwo(atoi(argv[i+1]));
-                printf("jpd dblocks_ct = %d", my_fs.dblocks_ct);
+                printf("jpd dblocks_ct = %d\n", my_fs.dblocks_ct);
             }
             else {
                 printf("jpd hmm");
@@ -184,7 +184,24 @@ void print_inode_deets(struct wfs_inode *inode)
 
 }
 
-int create_and_initialize_disk(const char* disk_path, size_t inode_ct, size_t dblock_ct, int raid) {
+void print_superblock_deets(struct wfs_sb *sb)
+{
+    if(sb == 0){
+        printf("sb is null\n");
+        return;
+    }
+    printf("num_inodes = %ld\n", sb->num_inodes);
+    printf("num_data_blocks = %ld\n", sb->num_data_blocks);
+    printf("i_bitmap_ptr = %ld\n", sb->i_bitmap_ptr);
+    printf("d_bitmap_ptr = %ld\n", sb->d_bitmap_ptr);
+    printf("i_blocks_ptr = %ld\n", sb->i_blocks_ptr);
+    printf("d_blocks_ptr = %ld\n", sb->d_blocks_ptr);
+    printf("raid = %d\n", sb->raid);
+    printf("disk_ct = %d\n", sb->disk_ct);
+    printf("disk_id = %d\n", sb->disk_id);
+}
+
+int create_and_initialize_disk(const char* disk_path, size_t inode_ct, size_t dblock_ct, int raid, int disk_id, int disk_ct) {
     
     // Create the file with read/write permissions
     int disk_fd = open(disk_path, O_RDWR, 0644);
@@ -226,6 +243,11 @@ int create_and_initialize_disk(const char* disk_path, size_t inode_ct, size_t db
     sb.d_blocks_ptr = sb.i_blocks_ptr + (inode_ct * BLOCK_SIZE);  
 
     sb.d_blocks_ptr = sb.d_blocks_ptr % 512 == 0 ? sb.d_blocks_ptr : (sb.d_blocks_ptr/512 + 1)*512; 
+
+    sb.disk_ct = disk_ct;
+    sb.disk_id = disk_id;
+
+    print_superblock_deets(&sb);
 
     // Calculate total file size
     off_t total_size = sb.d_blocks_ptr + (sb.num_data_blocks * BLOCK_SIZE);  
@@ -282,9 +304,9 @@ int create_and_initialize_disk(const char* disk_path, size_t inode_ct, size_t db
 
     // printf("jpd Base inode bitmap\n");
 
-    for (int i = 7; i >= 0; i--) {
-        printf("%d", (base_inode_bitmap & (1 << i)) ? 1 : 0);
-    }
+    // for (int i = 7; i >= 0; i--) {
+    //     printf("%d", (base_inode_bitmap & (1 << i)) ? 1 : 0);
+    // }
 
     // printf("jpd i_bitmap_ptr %ld\n", sb.i_bitmap_ptr);
     off_t current_pos = lseek(disk_fd, sb.i_bitmap_ptr, SEEK_SET);
@@ -341,7 +363,7 @@ int create_and_initialize_disk(const char* disk_path, size_t inode_ct, size_t db
     current_pos = lseek(disk_fd, sb.i_bitmap_ptr, SEEK_SET);
     int bytes_read = read(disk_fd, (void *) &i_bitmap, sizeof(unsigned char));
     if(bytes_read != sizeof(unsigned char)){
-        printf("something is up. invlalid bitmap read");
+        printf("something is up. invalid bitmap read");
     }
     // print_byte_binary(i_bitmap);
 
@@ -360,7 +382,6 @@ int create_and_initialize_disk(const char* disk_path, size_t inode_ct, size_t db
 
 int main(int argc, char* argv[])
 {
-    // printf("hii\n");
     fs_init_params(&my_fs);
 
     if(!validate_arguments(argc, argv)){
@@ -368,16 +389,13 @@ int main(int argc, char* argv[])
         exit(EXIT_FAILURE);
     }
 
-    // printf("sdasdsd\n");
     if(!parse_arguments(argc, argv)){
         printf("Error parsing arguments. Exiting...\n");
         exit(EXIT_FAILURE);
     }
     
     for(int i = 0; i < my_fs.disks_ct; i++){
-        // printf("creating fs..\n");
-        // create_fs(my_fs.disks[i], my_fs.inodes_ct, my_fs.dblocks_ct, my_fs.raid);
-        int res = create_and_initialize_disk(my_fs.disks[i], my_fs.inodes_ct, my_fs.dblocks_ct, my_fs.raid);
+        int res = create_and_initialize_disk(my_fs.disks[i], my_fs.inodes_ct, my_fs.dblocks_ct, my_fs.raid, i, my_fs.disks_ct);
         if(res == 0 || res == 255)
         {
             return res;
