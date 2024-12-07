@@ -10,11 +10,6 @@
 #include "helpers.c"
 // #include "wfs.h"
 
-#define OP_SUCCESS 0
-#define OP_FAIL 1
-#define SYS_ERROR 2
-
-
 // Info of all the cmd params 
 //
 struct {
@@ -72,6 +67,7 @@ void cleanup_and_exit(int status)
     cleanup();
     exit(status);
 }
+
 // Checks if a path is valid and if it is, it populates the stat struct
 //
 int is_valid_path(const char *path, struct stat *sb){
@@ -202,6 +198,9 @@ int mmap_disks()
     return OP_SUCCESS;
 }
 
+
+
+
 // static int wfs_getattr(const char *path, struct stat *stbuf)
 // {
 // 	int res;
@@ -261,13 +260,25 @@ int mmap_disks()
 
 // static int wfs_mkdir(const char *path, mode_t mode)
 // {
-//     int res;
+//     char *path_cpy = strdup(path);
+
+//     char *path_token = strtok(path, "/");
+//     while(path_token != NULL){
+//         printf("%s ", path_token);
+
+
+//         path_token = strtok(NULL, "/");
+//     }
+//     for()
 
 //     res = mkdir(path, mode);
 //     if (res == -1)
 //         return -errno;
 
 //     return 0;
+
+//     if()
+
 // }
 
 // static int wfs_unlink(const char *path)
@@ -365,6 +376,7 @@ int parse_args(int argc, char *argv[]){
             int len = (int)strlen(argv[i]); 
             memcpy(wfs_params.disks[disks_ct], argv[i],len);
             wfs_params.disks[disks_ct][len] = '\0';
+
             disks_ct++;
         }
         else if(argv[i][0] == '-' || i != argc - 1) // last arg is mount_path
@@ -431,6 +443,21 @@ int main(int argc, char *argv[])
         struct wfs_sb *sb = (struct wfs_sb *)disk_mmaps[i];
 
         print_superblock_deets(sb);
+        get_inode(disk_mmaps[i], 5);
+        DEBUG_PRINT("Size of sb: %ld\n", sizeof(*sb));
+        int inode = 0;
+        char *i_bitmap_ptr = get_ibitmap(disk_mmaps[i]);
+        DEBUG_PRINT("Is index %d bit set %d\n", 0, is_bit_set(i_bitmap_ptr, inode));
+
+        DEBUG_PRINT("Free inode slot at: %d\n", find_free_inode(disk_mmaps[i]));
+        inode = 12;
+        DEBUG_PRINT("Is index %d bit set %d\n", inode, is_bit_set(i_bitmap_ptr, inode));
+        set_bit(i_bitmap_ptr, inode, 1);
+        DEBUG_PRINT("Is index %d bit set %d\n", inode, is_bit_set(i_bitmap_ptr, inode));
+        DEBUG_PRINT("Free inode slot at: %d\n", find_free_inode(disk_mmaps[i]));
+        set_bit(i_bitmap_ptr, inode, 0);
+        DEBUG_PRINT("Is index %d bit set %d\n", inode, is_bit_set(i_bitmap_ptr, inode));
+        DEBUG_PRINT("Free inode slot at: %d\n", find_free_inode(disk_mmaps[i]));
     }
 
     // return fuse_main(argc, argv, &ops, NULL);

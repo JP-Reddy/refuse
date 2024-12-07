@@ -34,6 +34,7 @@ struct wfs_sb {
     off_t i_blocks_ptr;
     off_t d_blocks_ptr;
     // Extend after this line
+    int disk_size;
     int raid;
     int disk_ct;
     int disk_id;

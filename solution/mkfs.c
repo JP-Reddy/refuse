@@ -244,18 +244,20 @@ int create_and_initialize_disk(const char* disk_path, size_t inode_ct, size_t db
 
     sb.d_blocks_ptr = sb.d_blocks_ptr % 512 == 0 ? sb.d_blocks_ptr : (sb.d_blocks_ptr/512 + 1)*512; 
 
-    sb.disk_ct = disk_ct;
-    sb.disk_id = disk_id;
-
-    print_superblock_deets(&sb);
-
-    // Calculate total file size
     off_t total_size = sb.d_blocks_ptr + (sb.num_data_blocks * BLOCK_SIZE);  
 
     if(total_size > file_stat.st_size){
         printf("Requested file size greater than disk\n");
         return 255;
     }
+
+
+    sb.disk_ct = disk_ct;
+    sb.disk_id = disk_id;
+    sb.disk_size = total_size;
+    print_superblock_deets(&sb);
+
+    // Calculate total file size
 
     // Write superblock to the beginning of the file
     ssize_t bytes_written = write(disk_fd, &sb, sizeof(struct wfs_sb));
