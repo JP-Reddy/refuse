@@ -8,20 +8,6 @@
 #include <errno.h>
 #include <sys/mman.h>
 #include "helpers.c"
-// #include "wfs.h"
-
-// Info of all the cmd params 
-//
-struct {
-    char disks[MAX_DISKS][MAX_NAME];
-    char mount_path[MAX_NAME];
-    char **fuse_args;
-    int disks_ct;
-    int fuse_args_ct;
-    int raid;
-} wfs_params;
-
-char *disk_mmaps[MAX_DISKS];
 
 // Display all cmd params
 //
@@ -105,7 +91,7 @@ int validate_disks(){
     int disk_bitmap[wfs_params.disks_ct];
     
     int disks_ct = -1;
-
+    int raid = -1;
     // 
     for(int i = 0; i < wfs_params.disks_ct; i++)
     {
@@ -132,7 +118,12 @@ int validate_disks(){
             disks_ct = sb.disk_ct;
         }
         
-        if(disks_ct != sb.disk_ct)
+        if(raid == -1)
+        {
+            raid = sb.raid;
+        }
+
+        if(raid == 0 && disks_ct != sb.disk_ct)
         {
             fprintf(stderr, "Mismatch in disks count in the disk images. Are you sure you've mentioned the right disks\n");
             return OP_FAIL;
@@ -143,17 +134,20 @@ int validate_disks(){
         close(fd);
     }
     
-    if(disks_ct != wfs_params.disks_ct)
+    if(raid == 0)
     {
-        fprintf(stderr, "Disk image disks count and number of disks passed to cmd are different\n");
-        return OP_FAIL;
-    }
-
-    for(int i = 0; i < disks_ct; i++){
-        if(disk_bitmap[i] != 1)
+        if(disks_ct != wfs_params.disks_ct)
         {
-            fprintf(stderr,"Invalid set of disks present\n");
+            fprintf(stderr, "Disk image disks count and number of disks passed to cmd are different\n");
             return OP_FAIL;
+        }
+
+        for(int i = 0; i < disks_ct; i++){
+            if(disk_bitmap[i] != 1)
+            {
+                fprintf(stderr,"Invalid set of disks present\n");
+                return OP_FAIL;
+            }
         }
     }
 
@@ -266,6 +260,7 @@ int mmap_disks()
 //     while(path_token != NULL){
 //         printf("%s ", path_token);
 
+        
 
 //         path_token = strtok(NULL, "/");
 //     }
@@ -361,12 +356,10 @@ int parse_args(int argc, char *argv[]){
 
     int is_fuse_arg = 0, fuse_args_ct = 0, fuse_args_start_index = 0;
     int disks_ct = 0;
-    
     // Order of args 
     // 1. Executable
     // 2. Disks 
-    // 3. Fuse flags
-    // 4. Mount path
+    // 3. Fuse flags along with mount point
     //
     for(int i = 1; i < argc; i++){
 
@@ -392,6 +385,7 @@ int parse_args(int argc, char *argv[]){
             int len = (int) strlen(argv[i]);
             memcpy(wfs_params.mount_path, argv[i],len);
             wfs_params.mount_path[len] = '\0';
+            fuse_args_ct++;
         }
     }
 
@@ -458,6 +452,13 @@ int main(int argc, char *argv[])
         set_bit(i_bitmap_ptr, inode, 0);
         DEBUG_PRINT("Is index %d bit set %d\n", inode, is_bit_set(i_bitmap_ptr, inode));
         DEBUG_PRINT("Free inode slot at: %d\n", find_free_inode(disk_mmaps[i]));
+
+        // // printf("")
+        // char str[] = "/dir1/sids1-qweq/dire2.212/dfn#sqwe/asd.../erter";
+        // printf("Input string: %s\n", str);
+        // parse_and_validate_path(str);
+        mkdir_wfs(disk_mmaps[i], "/jpd");
+
     }
 
     // return fuse_main(argc, argv, &ops, NULL);

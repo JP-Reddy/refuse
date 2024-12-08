@@ -34,7 +34,7 @@ int round_up_to_nearest_thirtytwo(int num)
 
 int verify_raid_mode(int raid)
 {
-    if(raid == 0 || raid == 1 || raid  == 5 || raid == 10){
+    if(raid == 0 || raid == 1){
         return 1;
     }
     return 0;

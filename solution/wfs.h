@@ -9,7 +9,7 @@
 #define N_BLOCKS   (IND_BLOCK+1)
 
 #define MAX_DISKS 10
-
+#define MAX_PATH_DEPTH 1000
 /*
   The fields in the superblock should reflect the structure of the filesystem.
   `mkfs` writes the superblock to offset 0 of the disk image. 
@@ -61,3 +61,17 @@ struct wfs_dentry {
     char name[MAX_NAME];
     int num;
 };
+
+
+// Info of all the cmd params 
+//
+struct {
+    char disks[MAX_DISKS][MAX_NAME];
+    char mount_path[MAX_NAME];
+    char **fuse_args;
+    int disks_ct;
+    int fuse_args_ct;
+    int raid;
+} wfs_params;
+
+char *disk_mmaps[MAX_DISKS];
